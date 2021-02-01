@@ -1,25 +1,44 @@
 <launch>
-  <arg name="debug" default="0" doc="Sets the DEBUG flag for the uuv_simulator's plugins for verbose mode"/>
+  <arg name="debug" default="0"/>
+  <arg name="x" default="0"/>
+  <arg name="y" default="0"/>
+  <arg name="z" default="-20"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="yaw" default="0.0"/>
 
-  <arg name="x" default="0" doc="X coordinate of the initial position to spawn the model (in ENU)"/>
-  <arg name="y" default="0" doc="Y coordinate of the initial position to spawn the model (in ENU)"/>
-  <arg name="z" default="-20" doc="Z coordinate of the initial position to spawn the model (in ENU)"/>
-  <arg name="roll" default="0.0" doc="Roll angle of the initial orientation to spawn the model (in ENU)"/>
-  <arg name="pitch" default="0.0" doc="Pitch angle of the initial orientation to spawn the model (in ENU)"/>
-  <arg name="yaw" default="0.0" doc="Yaw angle of the initial orientation to spawn the model (in ENU)"/>
+  <arg name="use_sim_time" default="true"/>
 
   <arg name="use_geodetic" default="false"/>
   <arg name="latitude" default="0"/>
   <arg name="longitude" default="0"/>
   <arg name="depth" default="0"/>
 
+  <arg name="mode" default="default"/>
+  <arg name="namespace" default="eca_a9"/>
   <arg name="latitude_ref" default="0"/>
   <arg name="longitude_ref" default="0"/>
   <arg name="altitude_ref" default="0"/>
 
   <arg name="use_ned_frame" default="true"/>
+  <arg name="generated_urdf" default="$(find-pkg-share eca_a9_description)/robots/generated/$(var namespace)/robot_description"/>
+  <arg name="cmd"
+       default="$(exec-in-pkg xacro xacro) '$(find-pkg-share eca_a9_description)/robots/eca_a9_$(var mode).urdf.xacro'
+          debug:=$(var debug)
+          namespace:=$(var namespace)
+          inertial_reference_frame:=world_ned
+          > $(var generated_urdf)
+          " />
+  <arg name="cmdUnless"
+       default="$(exec-in-pkg xacro xacro) '$(find-pkg-share eca_a9_description)/robots/eca_a9_$(var mode).urdf.xacro'
+          debug:=$(var debug)
+          namespace:=$(var namespace)
+          inertial_reference_frame:=world
+          > $(var generated_urdf)
+          " />
 
-  <!-- Mode to open different robot configurations as set the in file
+
+    <!-- Mode to open different robot configurations as set the in file
   nomenclature standard for the files in /robots
 
   /robots/<mode>.xacro
@@ -29,48 +48,85 @@
   <!-- Vehicle's namespace -->
   <arg name="namespace" default="eca_a9"/>
 
-  <group ns="$(arg namespace)">
-    <group if="$(arg use_ned_frame)">
-      <param name="robot_description"
-             command="$(find xacro)/xacro '$(find eca_a9_description)/robots/eca_a9_$(arg mode).urdf.xacro' --inorder
-                      debug:=$(arg debug)
-                      namespace:=$(arg namespace)
-                      inertial_reference_frame:=world_ned" />
+  <group>
+    <push-ros-namespace namespace="$(var namespace)" />
+
+    <group if="$(var use_ned_frame)">
+      <executable
+        cmd="$(var cmd)"
+        name="robot_description"
+        output="screen"
+        shell="true">
+      </executable>
     </group>
 
-    <group unless="$(arg use_ned_frame)">
-      <param name="robot_description"
-             command="$(find xacro)/xacro '$(find eca_a9_description)/robots/eca_a9_$(arg mode).urdf.xacro' --inorder
-                      debug:=$(arg debug)
-                      namespace:=$(arg namespace)
-                      inertial_reference_frame:=world" />
+    <group unless="$(var use_ned_frame)">
+      <executable
+        cmd="$(var cmdUnless)"
+        cwd="$(find-pkg-prefix xacro)"
+        name="robot_description"
+        output="screen"
+        shell="true">
+      </executable>
     </group>
 
     <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
-    <group if="$(arg use_geodetic)">
-      <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
-            args="-urdf -latitude $(arg latitude) -longitude $(arg longitude) -depth $(arg depth) -latitude_ref $(arg latitude_ref) -longitude_ref $(arg longitude_ref) -altitude_ref $(arg altitude_ref) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+    <group if="$(var use_geodetic)">
+      <node
+        name="urdf_spawner"
+        pkg="gazebo_ros"
+        exec="spawn_entity.py"
+        output="screen"
+        args="
+          -latitude $(var latitude)
+          -longitude $(var longitude)
+          -depth $(var depth)
+          -latitude_ref $(var latitude_ref)
+          -longitude_ref $(var longitude_ref)
+          -altitude_ref $(var altitude_ref)
+          -R $(var roll)
+          -P $(var pitch)
+          -Y $(var yaw)
+          -entity $(var namespace)
+          -file $(var generated_urdf)
+          -gazebo_namespace /gazebo
+        "/>
     </group>
 
-    <group unless="$(arg use_geodetic)">
-      <node name="urdf_spawner" pkg="uuv_descriptions" type="spawn_model" respawn="false" output="screen"
-            args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -model $(arg namespace) -param /$(arg namespace)/robot_description"/>
+    <group unless="$(var use_geodetic)">
+      <node
+        name="urdf_spawner"
+        pkg="gazebo_ros"
+        exec="spawn_entity.py"
+        output="screen"
+        args="
+          -x $(var x)
+          -y $(var y)
+          -z $(var z)
+          -R $(var roll)
+          -P $(var pitch)
+          -Y $(var yaw)
+          -entity $(var namespace)
+          -file $(var generated_urdf)
+          -gazebo_namespace /gazebo
+        "/>
     </group>
 
 
     <!-- A joint state publisher plugin already is started with the model, no need to use the default joint state publisher -->
 
     <!-- Publish robot model for ROS -->
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen">
-      <param name="robot_description" value="/$(arg namespace)/robot_description" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" exec="robot_state_publisher" output="screen">
+      <param name="robot_description" value="/$(var namespace)/robot_description" />
+      <param name="use_sim_time" value="$(var use_sim_time)" />
     </node>
   </group>
 
   <!-- publish state and tf for in relation to the world frame -->
-  <include file="$(find uuv_assistants)/launch/message_to_tf.launch">
-    <arg name="namespace" value="$(arg namespace)"/>
+  <!--include file="$(find-pkg-share uuv_assistants)/launch/message_to_tf.launch">
+    <arg name="namespace" value="$(var namespace)"/>
     <arg name="world_frame" value="world"/>
-    <arg name="child_frame_id" value="/$(arg namespace)/base_link"/>
-  </include>
+    <arg name="child_frame_id" value="/$(var namespace)/base_link"/>
+  </include-->
 
 </launch>
