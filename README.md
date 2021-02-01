@@ -1,3 +1,14 @@
+# Plankton port for ECA A9
+
+UUV simulator ported and named [Plankton](https://github.com/Liquid-ai/Plankton). This repo contains migrated version of `eca_a9` AUV and original source code is [here](https://github.com/uuvsimulator/eca_a9).
+
+Version table
+- Ubuntu 20.04
+- ROS2 Foxy
+- Gazebo 11
+- Plankton version 0.6.1, commit [#877bd6b](https://github.com/Liquid-ai/Plankton/commit/877bd6be313c1e0209c4db28c8dd4815d62ded04)
+
+
 # ECA A9 AUV
 
 [![Build Status](https://travis-ci.org/uuvsimulator/eca_a9.svg?branch=master)](https://travis-ci.org/uuvsimulator/eca_a9)
