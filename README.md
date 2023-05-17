@@ -48,15 +48,15 @@ repository and follow the installation instructions of the package. Then you can
 this package in the `src` folder of you catkin workspace
 
 ```
-cd ~/catkin_ws/src
-git clone https://github.com/uuvsimulator/eca_a9.git
+cd ~/dev_ws/src
+git clone https://github.com/nolan-sldprt/eca_a9_plankton.git
 ```
 
 and then build your catkin workspace
 
 ```bash
-cd ~/catkin_ws
-catkin_make # or <catkin build>, if you are using catkin_tools
+cd ~/dev_ws
+colcon build --symlink-install
 ```
 
 ## Example of usage
@@ -65,13 +65,13 @@ To run a demonstration with the vehicle with teleoperation, you can run a UUV
 simulator Gazebo scenario, such as
 
 ```bash
-roslaunch uuv_gazebo_worlds ocean_waves.launch
+ros2 launch uuv_gazebo_worlds ocean_waves.launch
 ```
 
 and then
 
 ```bash
-roslaunch eca_a9_gazebo start_demo_teleop.launch joy_id:=0
+ros2 launch eca_a9_gazebo start_demo_teleop.launch joy_id:=0
 ```
 
 The teleoperation nodes are pre-configured per default for the XBox 360
