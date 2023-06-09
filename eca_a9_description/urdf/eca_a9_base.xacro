@@ -132,7 +132,8 @@
       smooth_current_tau="1.9499"
       voltage="4.2"
       update_rate="2.0"/>
-
+    
     <xacro:include filename="$(find eca_a9_description)/urdf/eca_a9_sensors.xacro"/>
+    
   </xacro:macro>
 </robot>

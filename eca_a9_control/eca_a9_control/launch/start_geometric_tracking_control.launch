@@ -57,7 +57,7 @@
           output="screen"
           unless="$(arg use_ned_frame)">
       <remap from="odom" to="pose_gt"/>
-      <rosparam subst_value="true">
+      <param subst_value="true">
           timeout_idle_mode: $(arg timeout_idle_mode)
           max_forward_speed: $(arg max_forward_speed)
           base_link: base_link
@@ -98,7 +98,7 @@
               conversion_fcn: $(arg thruster_conversion_fcn)
               conversion_fcn_params:
                   gain: $(arg thruster_gain)
-      </rosparam>
+      </param>
     </node>
 
     <node pkg="uuv_trajectory_control"
@@ -107,7 +107,7 @@
           output="screen"
           if="$(arg use_ned_frame)">
       <remap from="odom" to="pose_gt_ned"/>
-      <rosparam subst_value="true">
+      <param subst_value="true">
           timeout_idle_mode: $(arg timeout_idle_mode)
           max_forward_speed: $(arg max_forward_speed)
           base_link: base_link_ned
@@ -148,7 +148,7 @@
               conversion_fcn: $(arg thruster_conversion_fcn)
               conversion_fcn_params:
                   gain: $(arg thruster_gain)
-      </rosparam>
+      </param>
     </node>
   </group>
 
